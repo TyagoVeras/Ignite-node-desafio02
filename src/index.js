@@ -10,19 +10,68 @@ app.use(cors());
 const users = [];
 
 function checksExistsUserAccount(request, response, next) {
-  // Complete aqui
+ const { username } = request.headers;
+
+ const user = users.find(user => user.username == username);
+
+ if(user){
+   request.user = user;
+   return next();
+ }
+
+ return response.status(404).json({ error: 'User not found'});
+
+
 }
 
 function checksCreateTodosUserAvailability(request, response, next) {
-  // Complete aqui
+  const { user } = request;
+
+  const qtdTodos = user.todos.length;
+
+  if( qtdTodos < 10 || user.pro == true)
+    return next()
+  else
+    return response.status(403).json({ error: 'User has reached the task limit for the free plan. Upgrade to pro version'})
+
 }
 
 function checksTodoExists(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers;
+  const { id } = request.params;
+
+  const userExists = users.find( user => user.username === username);
+
+  if(userExists){
+    if(validate(id)){
+      const todoHasUser = userExists.todos.find( todo => todo.id === id);
+      if(todoHasUser){
+        request.user = userExists;
+        request.todo = todoHasUser;
+        return next();
+      }else{
+        return response.status(404).json({ error: 'Todo not has for user'});
+      }
+    }else{
+      return response.status(400).json({ error: 'Id not avaliable'});
+    }
+    
+  }else{
+    return response.status(404).json({ error: 'User not found'})
+  }
 }
 
 function findUserById(request, response, next) {
-  // Complete aqui
+  const { id } = request.params;
+
+  const user = users.find(user => user.id == id);
+
+  if(user){
+    request.user = user;
+    return next()
+  }
+  return response.status(404).json({ error: 'User not found'});
+
 }
 
 app.post('/users', (request, response) => {
